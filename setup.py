@@ -12,9 +12,18 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import pathlib
 
 import setuptools
 
+# The directory containing this file
+HERE = pathlib.Path(__file__).parent
+
+# The text of the README file
+README = (HERE / "README.rst").read_text()
+
 setuptools.setup(
     setup_requires=['pbr>=2.0.0'],
+    long_description=README,
+    long_description_content_type='text/x-rst',
     pbr=True)

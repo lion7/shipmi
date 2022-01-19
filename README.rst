@@ -6,7 +6,8 @@ Credits
 --------
 
 This project is a fork of https://github.com/openstack/virtualbmc.
-Many thanks to the OpenStack team for creating an awesome piece of software!
+
+Many thanks go to the OpenStack team for creating an awesome piece of software!
 
 Overview
 --------
@@ -38,6 +39,13 @@ Supported IPMI commands
   # Get the current boot device
   ipmitool -I lanplus -U admin -P password -H 127.0.0.1 chassis bootparam get 5
 
+
+Resources
+=====================
+
+From the IPMI - Intelligent Platform Management Interface Specification
+Second Generation v2.0 Document Revision 1.1 October 1, 2013
+https://www.intel.com/content/dam/www/public/us/en/documents/product-briefs/ipmi-second-gen-interface-spec-v2-rev1-1.pdf
 
 How to use ShIPMI
 =====================
@@ -158,4 +166,3 @@ against the address and port of that virtual BMC. For example:
 * To get the current boot device::
 
     $ ipmitool -I lanplus -U admin -P password -H 127.0.0.1 -p 6230 chassis bootparam get 5
-

@@ -55,7 +55,12 @@ class ProviderConfig(object):
             raise ProviderMissingOption(name=self.name, section='POWER', option='shutdown')
 
     def get(self, section, option):
-        return self._config[section][option]
+        if not self._config.has_section(section):
+            return None
+        s = self._config[section]
+        if option not in s:
+            return None
+        return s[option]
 
     def __getitem__(self, key):
         section, option = str.split(key, '.', 2)

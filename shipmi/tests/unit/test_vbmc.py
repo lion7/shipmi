@@ -14,6 +14,8 @@
 #    under the License.
 from unittest import mock
 
+import pyghmi.ipmi.command
+
 from shipmi import vbmc
 from shipmi.tests.unit import base
 from shipmi.tests.unit import utils as test_utils
@@ -30,25 +32,8 @@ class VirtualBMCTestCase(base.TestCase):
         mock.patch('shipmi.provider._PROVIDERS', test_utils.TEST_PROVIDERS).start()
         self.vbmc = vbmc.VirtualBMC(**vbmc_config)
 
-    def test_get_boot_device(self):
-        ret = self.vbmc.get_boot_device()
-
-        self.assertEqual("optical", ret)
-
-    def test_set_boot_device(self):
-        for boot_device in vbmc.VALID_BOOT_DEVICES:
-            self.vbmc.set_boot_device(boot_device)
-
-    def test_set_boot_device_unknown_device_error(self):
-        ret = self.vbmc.set_boot_device('device-foo-bar')
-        self.assertEqual(vbmc.IPMI_INVALID_DATA, ret)
-
-    def _test_get_power_state(self):
-        ret = self.vbmc.get_power_state()
-        self.assertEqual(vbmc.POWERON, ret)
-
-    def test_pulse_diag(self):
-        self.vbmc.pulse_diag()
+    def test_cold_reset(self):
+        self.vbmc.cold_reset()
 
     def test_power_off(self):
         self.vbmc.power_off()
@@ -56,8 +41,30 @@ class VirtualBMCTestCase(base.TestCase):
     def test_power_on(self):
         self.vbmc.power_on()
 
+    def test_power_cycle(self):
+        self.vbmc.power_cycle()
+
     def test_power_reset(self):
         self.vbmc.power_reset()
 
+    def test_pulse_diag(self):
+        self.vbmc.pulse_diag()
+
     def test_power_shutdown(self):
         self.vbmc.power_shutdown()
+
+    def test_get_power_state(self):
+        ret = self.vbmc.get_power_state()
+        self.assertEqual('off', ret)
+
+    def test_is_active(self):
+        ret = self.vbmc.is_active()
+        self.assertEqual(False, ret)
+
+    def test_get_boot_device(self):
+        ret = self.vbmc.get_boot_device()
+        self.assertEqual("optical", ret)
+
+    def test_set_boot_device(self):
+        for boot_device in pyghmi.ipmi.command.boot_devices.keys():
+            self.vbmc.set_boot_device(boot_device)
