@@ -27,14 +27,6 @@ class ProviderNotFound(ShIPMIError):
     message = 'No provider with matching name "%(name)s" was found'
 
 
-class ProviderMissingSection(ShIPMIError):
-    message = 'Provider "%(name)s" is missing section %(section)s'
-
-
-class ProviderMissingOption(ShIPMIError):
-    message = 'Provider "%(name)s" is missing option %(option)s in section %(section)s'
-
-
 class VirtualBMCCommandFailed(ShIPMIError):
     message = 'Command "%(command)s" failed with exit code %(exitcode)s'
 

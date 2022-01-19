@@ -14,7 +14,6 @@ import configparser
 import os
 import pathlib
 
-from shipmi.exception import ProviderMissingSection, ProviderMissingOption
 from shipmi.exception import ProviderNotFound
 
 
@@ -24,35 +23,9 @@ class ProviderConfig(object):
         config = configparser.ConfigParser(interpolation=None)
         read_files = config.read(paths)
         if len(read_files) == 0:
-            raise ProviderMissingOption(name='unknown', section=config.default_section, option='name')
+            raise ProviderNotFound(name='unknown', section=config.default_section, option='name')
         self.name = str(pathlib.Path(os.path.basename(read_files[0])).with_suffix(""))
         self._config = config
-        self._validate()
-
-    def _validate(self):
-        if not self._config.has_section('BOOT'):
-            raise ProviderMissingSection(name=self.name, section='BOOT')
-        boot = self._config['BOOT']
-        if 'get' not in boot:
-            raise ProviderMissingOption(name=self.name, section='BOOT', option='get')
-        if 'set' not in boot:
-            raise ProviderMissingOption(name=self.name, section='BOOT', option='set')
-
-        if not self._config.has_section('POWER'):
-            raise ProviderMissingSection(name=self.name, section='POWER')
-        power = self._config['POWER']
-        if 'status' not in power:
-            raise ProviderMissingOption(name=self.name, section='POWER', option='status')
-        if 'on' not in power:
-            raise ProviderMissingOption(name=self.name, section='POWER', option='on')
-        if 'off' not in power:
-            raise ProviderMissingOption(name=self.name, section='POWER', option='off')
-        if 'diag' not in power:
-            raise ProviderMissingOption(name=self.name, section='POWER', option='diag')
-        if 'reset' not in power:
-            raise ProviderMissingOption(name=self.name, section='POWER', option='reset')
-        if 'shutdown' not in power:
-            raise ProviderMissingOption(name=self.name, section='POWER', option='shutdown')
 
     def get(self, section, option):
         if not self._config.has_section(section):
