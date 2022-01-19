@@ -2,6 +2,12 @@
 Shell IPMI
 ==========
 
+Credits
+--------
+
+This project is a fork of https://github.com/openstack/virtualbmc.
+Many thanks to the OpenStack team for creating an awesome piece of software!
+
 Overview
 --------
 
