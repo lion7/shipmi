@@ -19,12 +19,13 @@ from shipmi.exception import ProviderNotFound
 
 class ProviderConfig(object):
 
-    def __init__(self, paths):
+    def __init__(self, file):
+        self.name = str(pathlib.Path(file).with_suffix("").name)
+        self.path = file
         config = configparser.ConfigParser(interpolation=None)
-        read_files = config.read(paths)
+        read_files = config.read(file)
         if len(read_files) == 0:
-            raise ProviderNotFound(name='unknown', section=config.default_section, option='name')
-        self.name = str(pathlib.Path(os.path.basename(read_files[0])).with_suffix(""))
+            raise ProviderNotFound(name=self.name)
         self._config = config
 
     def get(self, section, option):
@@ -41,23 +42,30 @@ class ProviderConfig(object):
 
 
 _PROVIDERS_PATHS = [
-    os.environ.get('SHIPMI_PROVIDERS', ''),
+    os.path.join(os.path.dirname(__file__), 'providers'),
+    '/etc/shipmi/providers',
     os.path.join(os.path.expanduser('~'), '.shipmi', 'providers'),
-    '/etc/shipmi/providers'
+    os.environ.get('SHIPMI_PROVIDERS', ''),
 ]
 _PROVIDERS = {}
 
 
 def _discover_providers():
-    if len(_PROVIDERS) == 0:
-        for path in _PROVIDERS_PATHS:
-            if os.path.exists(path):
-                files = map(lambda file: os.path.join(path, file), os.listdir(path))
-                files = filter(lambda file: file and str.endswith(file, '.conf'), files)
-                files = list(files)
-                if len(files) > 0:
-                    provider = ProviderConfig(files)
-                    _PROVIDERS[provider.name] = provider
+    global _PROVIDERS
+    _PROVIDERS = {}
+    files = []
+    for path in _PROVIDERS_PATHS:
+        if os.path.exists(path):
+            for dirpath, _, filenames in os.walk(path):
+                for file in filenames:
+                    if str.endswith(file, '.conf'):
+                        subpath = os.path.join(dirpath, file)
+                        files.append(subpath)
+
+    if len(files) > 0:
+        for file in files:
+            provider = ProviderConfig(file)
+            _PROVIDERS[provider.name] = provider
 
 
 def get_provider(name):
@@ -65,7 +73,8 @@ def get_provider(name):
         path = os.path.join(os.curdir, name)
         return ProviderConfig(path)
     else:
-        _discover_providers()
+        if len(_PROVIDERS) == 0:
+            _discover_providers()
         provider = _PROVIDERS.get(name)
         if provider:
             return provider
@@ -74,5 +83,6 @@ def get_provider(name):
 
 
 def names():
-    _discover_providers()
+    if len(_PROVIDERS) == 0:
+        _discover_providers()
     return list(_PROVIDERS.keys())

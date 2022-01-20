@@ -20,19 +20,20 @@ from unittest import mock
 
 import zmq
 
+from shipmi import provider
 from shipmi.cmd import shipmi
 from shipmi.tests.unit import base
 from shipmi.tests.unit import utils as test_utils
 
 
-@mock.patch('shipmi.provider._PROVIDERS_PATHS', [])
-@mock.patch('shipmi.provider._PROVIDERS', test_utils.TEST_PROVIDERS)
 @mock.patch.object(sys, 'exit', lambda _: None)
 class VBMCTestCase(base.TestCase):
 
     def setUp(self):
         super(VBMCTestCase, self).setUp()
         self.config = test_utils.get_vbmc_config()
+        with mock.patch('shipmi.provider._PROVIDERS_PATHS', test_utils.TEST_PROVIDERS_PATHS):
+            provider._discover_providers()
 
     @mock.patch.object(zmq, 'Context')
     @mock.patch.object(zmq, 'Poller')
@@ -82,7 +83,7 @@ class VBMCTestCase(base.TestCase):
                 'port': 623,
                 'username': 'ironic',
                 'password': 'password',
-                'provider': test_utils.TEST_PROVIDER_NAME,
+                'provider': 'test',
                 'name': 'bar',
             }
 

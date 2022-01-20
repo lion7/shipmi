@@ -23,7 +23,7 @@ import shutil
 from unittest import mock
 
 
-from shipmi import exception
+from shipmi import exception, provider
 from shipmi import manager
 from shipmi.tests.unit import base
 from shipmi.tests.unit import utils as test_utils
@@ -31,8 +31,6 @@ from shipmi.tests.unit import utils as test_utils
 _CONFIG_PATH = '/foo'
 
 
-@mock.patch('shipmi.provider._PROVIDERS_PATHS', [])
-@mock.patch('shipmi.provider._PROVIDERS', test_utils.TEST_PROVIDERS)
 class VirtualBMCManagerTestCase(base.TestCase):
 
     def setUp(self):
@@ -48,8 +46,10 @@ class VirtualBMCManagerTestCase(base.TestCase):
         self.add_params = {'username': 'admin', 'password': 'pass',
                            'port': '777', 'address': '::',
                            'name': 'Squidward Tentacles',
-                           'provider': test_utils.TEST_PROVIDER_NAME,
+                           'provider': 'test',
                            'active': 'False'}
+        with mock.patch('shipmi.provider._PROVIDERS_PATHS', test_utils.TEST_PROVIDERS_PATHS):
+            provider._discover_providers()
 
     def _get_config(self, section, item):
         return self.vbmc_config0.get(item)

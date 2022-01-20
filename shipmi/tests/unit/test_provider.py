@@ -12,22 +12,18 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import pathlib
-
-TEST_PROVIDERS_PATHS = [str(pathlib.Path(__file__).parent.joinpath('providers'))]
 
 
-def get_vbmc_config(**kwargs):
-    config = {'name': kwargs.get('name', 'SpongeBob'),
-              'address': kwargs.get('address', '::'),
-              'port': kwargs.get('port', 123),
-              'username': kwargs.get('username', 'admin'),
-              'password': kwargs.get('password', 'pass'),
-              'provider': kwargs.get('provider', 'test'),
-              'active': kwargs.get('active', False)}
+from shipmi import provider
+from shipmi.tests.unit import base
 
-    status = kwargs.get('status')
-    if status is not None:
-        config['status'] = status
 
-    return config
+class ShIPMIProviderTestCase(base.TestCase):
+
+    def setUp(self):
+        super(ShIPMIProviderTestCase, self).setUp()
+
+    def test_discovery(self):
+        provider._discover_providers()
+        names = provider.names()
+        self.assertListEqual(names, ['proxmox-qm'])

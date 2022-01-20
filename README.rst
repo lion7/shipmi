@@ -2,6 +2,9 @@
 Shell IPMI
 ==========
 
+.. image:: https://badge.fury.io/py/shipmi.svg
+    :target: https://badge.fury.io/py/shipmi
+
 Credits
 --------
 
@@ -47,6 +50,7 @@ From the IPMI - Intelligent Platform Management Interface Specification
 Second Generation v2.0 Document Revision 1.1 October 1, 2013
 https://www.intel.com/content/dam/www/public/us/en/documents/product-briefs/ipmi-second-gen-interface-spec-v2-rev1-1.pdf
 
+
 How to use ShIPMI
 =====================
 
@@ -73,6 +77,28 @@ if they were physical hardware servers.
 The ``shipmi`` client can only communicate with ``shipmid`` server if both are running on the same host.
 
 By this moment you should be able to have the ``ipmitool`` managing ShIPMI instances over the network.
+
+
+Creating a provider
+---------------------------
+
+First create a provider that provides the shell scripts to execute.
+Note that you can use pipes or subshells in these scripts.
+You can also provide a path to an external script to execute.
+Relative paths are resolved relatively to the folder the provider is located in.
+
+For example to manage Proxmox VMs using the `qm` CLI,
+create a file `/etc/shipmi/providers/proxmox-qm.conf` with the following content::
+    [BOOT]
+    get=qm config %(name)s | grep 'boot:' | sed -e 's|boot: order=scsi0.*|hd|' -e 's|boot: order=ide2.*|optical|' -e 's|boot: order=net0.*|network|'
+    set=qm set %(name)s --boot order=$(echo %(bootdev)s | sed -e 's|hd|scsi0|' -e 's|optical|ide2|' -e 's|network|net0|')
+    [POWER]
+    status=qm status %(name)s | sed -e 's|status: running|on|' -e 's|status: stopped|off|'
+    on=qm start %(name)s
+    off=qm stop %(name)s
+    shutdown=qm shutdown %(name)s
+    reset=qm reset %(name)s
+
 
 Configuring virtual BMCs
 ---------------------------
