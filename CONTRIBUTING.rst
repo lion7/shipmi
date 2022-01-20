@@ -21,8 +21,17 @@ Build the distribution::
 
     python3 -m build
 
+
+Contributing
+------------
+
+Open a PR on GitHub: https://github.com/lion7/shipmi/pulls
+
+
 Upload to PyPi
 --------------
+
+ Note: this step is only possible if you have the correct authorizations!
 
 Check the distribution and upload it to the TestPyPi index::
 
