@@ -33,7 +33,7 @@ class VBMCTestCase(base.TestCase):
         super(VBMCTestCase, self).setUp()
         self.config = test_utils.get_vbmc_config()
         with mock.patch('shipmi.provider._PROVIDERS_PATHS', test_utils.TEST_PROVIDERS_PATHS):
-            provider._discover_providers()
+            provider.discover_providers()
 
     @mock.patch.object(zmq, 'Context')
     @mock.patch.object(zmq, 'Poller')
@@ -47,8 +47,7 @@ class VBMCTestCase(base.TestCase):
         mock_zmq_poller.poll.return_value = {}
 
         with mock.patch.object(sys, 'stderr', io.StringIO()) as output:
-            rc = shipmi.main(['--no-daemon',
-                            'add', '--username', 'ironic', '--provider', 'test', 'bar'])
+            rc = shipmi.main(['--no-daemon', 'add', '--username', 'ironic', '--provider', 'test', 'bar'])
 
             self.assertEqual(expected_rc, rc)
             self.assertEqual(expected_output, output.getvalue())
@@ -56,212 +55,133 @@ class VBMCTestCase(base.TestCase):
     @mock.patch.object(zmq, 'Context')
     @mock.patch.object(zmq, 'Poller')
     def test_main_add(self, mock_zmq_poller, mock_zmq_context):
-        expected_rc = 0
-        expected_output = ''
-
-        srv_rsp = {
-            'rc': expected_rc,
-            'msg': ['OK']
-        }
-
-        mock_zmq_context = mock_zmq_context.return_value
-        mock_zmq_socket = mock_zmq_context.socket.return_value
-        mock_zmq_socket.recv.return_value = json.dumps(srv_rsp).encode()
-        mock_zmq_poller = mock_zmq_poller.return_value
-        mock_zmq_poller.poll.return_value = {
-            mock_zmq_socket: zmq.POLLIN
-        }
-
-        with mock.patch.object(sys, 'stdout', io.StringIO()) as output:
-            rc = shipmi.main(['add', '--username', 'ironic', '--provider', 'test', 'bar'])
-
-            query = json.loads(mock_zmq_socket.send.call_args[0][0].decode())
-
-            expected_query = {
+        self._test_zmq(
+            mock_zmq_poller,
+            mock_zmq_context,
+            {
+                'rc': 0,
+                'msg': ['OK']
+            },
+            ['add', '--username', 'ironic', '--provider', 'test', 'bar'],
+            {
                 'command': 'add',
+                'name': 'bar',
                 'address': '::',
                 'port': 623,
                 'username': 'ironic',
                 'password': 'password',
                 'provider': 'test',
-                'name': 'bar',
-            }
-
-            self.assertEqual(expected_query, query)
-
-            self.assertEqual(expected_rc, rc)
-            self.assertEqual(expected_output, output.getvalue())
+            },
+            ''
+        )
 
     @mock.patch.object(zmq, 'Context')
     @mock.patch.object(zmq, 'Poller')
     def test_main_delete(self, mock_zmq_poller, mock_zmq_context):
-        expected_rc = 0
-        expected_output = ''
-
-        srv_rsp = {
-            'rc': expected_rc,
-            'msg': ['OK']
-        }
-
-        mock_zmq_context = mock_zmq_context.return_value
-        mock_zmq_socket = mock_zmq_context.socket.return_value
-        mock_zmq_socket.recv.return_value = json.dumps(srv_rsp).encode()
-        mock_zmq_poller = mock_zmq_poller.return_value
-        mock_zmq_poller.poll.return_value = {
-            mock_zmq_socket: zmq.POLLIN
-        }
-
-        with mock.patch.object(sys, 'stdout', io.StringIO()) as output:
-
-            rc = shipmi.main(['delete', 'foo', 'bar'])
-
-            query = json.loads(mock_zmq_socket.send.call_args[0][0].decode())
-
-            expected_query = {
-                "names": ["foo", "bar"],
+        self._test_zmq(
+            mock_zmq_poller,
+            mock_zmq_context,
+            {
+                'rc': 0,
+                'msg': ['OK']
+            },
+            ['delete', 'foo', 'bar'],
+            {
                 "command": "delete",
-            }
-
-            self.assertEqual(expected_query, query)
-
-            self.assertEqual(expected_rc, rc)
-            self.assertEqual(expected_output, output.getvalue())
+                "names": ["foo", "bar"],
+            },
+            ''
+        )
 
     @mock.patch.object(zmq, 'Context')
     @mock.patch.object(zmq, 'Poller')
     def test_main_start(self, mock_zmq_poller, mock_zmq_context):
-        expected_rc = 0
-        expected_output = ''
-
-        srv_rsp = {
-            'rc': expected_rc,
-            'msg': ['OK']
-        }
-
-        mock_zmq_context = mock_zmq_context.return_value
-        mock_zmq_socket = mock_zmq_context.socket.return_value
-        mock_zmq_socket.recv.return_value = json.dumps(srv_rsp).encode()
-        mock_zmq_poller = mock_zmq_poller.return_value
-        mock_zmq_poller.poll.return_value = {
-            mock_zmq_socket: zmq.POLLIN
-        }
-
-        with mock.patch.object(sys, 'stdout', io.StringIO()) as output:
-
-            rc = shipmi.main(['start', 'foo', 'bar'])
-
-            query = json.loads(mock_zmq_socket.send.call_args[0][0].decode())
-
-            expected_query = {
-                'command': 'start',
-                'names': ['foo', 'bar']
-            }
-
-            self.assertEqual(expected_query, query)
-
-            self.assertEqual(expected_rc, rc)
-            self.assertEqual(expected_output, output.getvalue())
+        self._test_zmq(
+            mock_zmq_poller,
+            mock_zmq_context,
+            {
+                'rc': 0,
+                'msg': ['OK']
+            },
+            ['start', 'foo', 'bar'],
+            {
+                "command": "start",
+                "names": ["foo", "bar"],
+            },
+            ''
+        )
 
     @mock.patch.object(zmq, 'Context')
     @mock.patch.object(zmq, 'Poller')
     def test_main_stop(self, mock_zmq_poller, mock_zmq_context):
-        expected_rc = 0
-        expected_output = ''
-
-        srv_rsp = {
-            'rc': expected_rc,
-            'msg': ['OK']
-        }
-
-        mock_zmq_context = mock_zmq_context.return_value
-        mock_zmq_socket = mock_zmq_context.socket.return_value
-        mock_zmq_socket.recv.return_value = json.dumps(srv_rsp).encode()
-        mock_zmq_poller = mock_zmq_poller.return_value
-        mock_zmq_poller.poll.return_value = {
-            mock_zmq_socket: zmq.POLLIN
-        }
-
-        with mock.patch.object(sys, 'stdout', io.StringIO()) as output:
-
-            rc = shipmi.main(['stop', 'foo', 'bar'])
-
-            query = json.loads(mock_zmq_socket.send.call_args[0][0].decode())
-
-            expected_query = {
-                'command': 'stop',
-                'names': ['foo', 'bar']
-            }
-
-            self.assertEqual(expected_query, query)
-
-            self.assertEqual(expected_rc, rc)
-            self.assertEqual(expected_output, output.getvalue())
+        self._test_zmq(
+            mock_zmq_poller,
+            mock_zmq_context,
+            {
+                'rc': 0,
+                'msg': ['OK']
+            },
+            ['stop', 'foo', 'bar'],
+            {
+                "command": "stop",
+                "names": ["foo", "bar"],
+            },
+            ''
+        )
 
     @mock.patch.object(zmq, 'Context')
     @mock.patch.object(zmq, 'Poller')
     def test_main_list(self, mock_zmq_poller, mock_zmq_context):
-        expected_rc = 0
-        expected_output = """+-------+-------+
+        self._test_zmq(
+            mock_zmq_poller,
+            mock_zmq_context,
+            {
+                'rc': 0,
+                'header': ['col1', 'col2'],
+                'rows': [['cell1', 'cell2'],
+                         ['cell3', 'cell4']],
+            },
+            ['list'],
+            {
+                "command": "list",
+            },
+            """+-------+-------+
 | col1  | col2  |
 +-------+-------+
 | cell1 | cell2 |
 | cell3 | cell4 |
 +-------+-------+
 """
-
-        srv_rsp = {
-            'rc': expected_rc,
-            'header': ['col1', 'col2'],
-            'rows': [['cell1', 'cell2'],
-                     ['cell3', 'cell4']],
-        }
-
-        mock_zmq_context = mock_zmq_context.return_value
-        mock_zmq_socket = mock_zmq_context.socket.return_value
-        mock_zmq_socket.recv.return_value = json.dumps(srv_rsp).encode()
-        mock_zmq_poller = mock_zmq_poller.return_value
-        mock_zmq_poller.poll.return_value = {
-            mock_zmq_socket: zmq.POLLIN
-        }
-
-        with mock.patch.object(sys, 'stdout', io.StringIO()) as output:
-
-            rc = shipmi.main(['list'])
-
-            query = json.loads(mock_zmq_socket.send.call_args[0][0].decode())
-
-            expected_query = {
-                "command": "list",
-            }
-
-            # Cliff adds some extra args to the query
-            query = {key: query[key] for key in query
-                     if key in expected_query}
-
-            self.assertEqual(expected_query, query)
-
-            self.assertEqual(expected_rc, rc)
-            self.assertEqual(expected_output, output.getvalue())
+        )
 
     @mock.patch.object(zmq, 'Context')
     @mock.patch.object(zmq, 'Poller')
     def test_main_show(self, mock_zmq_poller, mock_zmq_context):
-        expected_rc = 0
-
-        expected_output = """+-------+-------+
+        self._test_zmq(
+            mock_zmq_poller,
+            mock_zmq_context,
+            {
+                'rc': 0,
+                'header': ['col1', 'col2'],
+                'rows': [['cell1', 'cell2'],
+                         ['cell3', 'cell4']],
+            },
+            ['show', 'node0'],
+            {
+                "command": "show",
+                "name": "node0",
+            },
+            """+-------+-------+
 | col1  | col2  |
 +-------+-------+
 | cell1 | cell2 |
 | cell3 | cell4 |
 +-------+-------+
 """
+        )
 
-        srv_rsp = {
-            'rc': expected_rc,
-            'header': ['col1', 'col2'],
-            'rows': [['cell1', 'cell2'],
-                     ['cell3', 'cell4']]
-        }
+    def _test_zmq(self, mock_zmq_poller, mock_zmq_context, srv_rsp, args, expected_query, expected_output):
+        expected_rc = srv_rsp['rc']
 
         mock_zmq_context = mock_zmq_context.return_value
         mock_zmq_socket = mock_zmq_context.socket.return_value
@@ -272,15 +192,10 @@ class VBMCTestCase(base.TestCase):
         }
 
         with mock.patch.object(sys, 'stdout', io.StringIO()) as output:
+            rc = shipmi.main(args)
 
-            rc = shipmi.main(['show', 'node0'])
-
-            query = json.loads(mock_zmq_socket.send.call_args[0][0].decode())
-
-            expected_query = {
-                "name": "node0",
-                "command": "show",
-            }
+            response = mock_zmq_socket.send.call_args[0][0]
+            query = json.loads(response.decode())
 
             # Cliff adds some extra args to the query
             query = {key: query[key] for key in query

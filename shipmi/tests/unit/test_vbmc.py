@@ -32,7 +32,7 @@ class VirtualBMCTestCase(base.TestCase):
         # constructor, so we need to mock it here
         mock.patch('pyghmi.ipmi.bmc.Bmc.__init__', lambda *args, **kwargs: None).start()
         with mock.patch('shipmi.provider._PROVIDERS_PATHS', test_utils.TEST_PROVIDERS_PATHS):
-            provider._discover_providers()
+            provider.discover_providers()
         self.vbmc = vbmc.VirtualBMC(**vbmc_config)
         self.power_state_file = pathlib.Path(__file__).parent.joinpath('providers', self.vbmc.name + '.powerstate~')
         self.bootdev_file = pathlib.Path(__file__).parent.joinpath('providers', self.vbmc.name + '.bootdev~')

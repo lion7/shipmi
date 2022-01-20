@@ -24,6 +24,6 @@ class ShIPMIProviderTestCase(base.TestCase):
         super(ShIPMIProviderTestCase, self).setUp()
 
     def test_discovery(self):
-        provider._discover_providers()
+        provider.discover_providers()
         names = provider.names()
         self.assertListEqual(names, ['proxmox-qm'])

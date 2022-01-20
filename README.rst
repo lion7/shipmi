@@ -87,8 +87,9 @@ Note that you can use pipes or subshells in these scripts.
 You can also provide a path to an external script to execute.
 Relative paths are resolved relatively to the folder the provider is located in.
 
-For example to manage Proxmox VMs using the `qm` CLI,
-create a file `/etc/shipmi/providers/proxmox-qm.conf` with the following content::
+For example to manage Proxmox VMs using the ``qm`` CLI,
+create a file ``/etc/shipmi/providers/proxmox-qm.conf`` with the following content::
+
     [BOOT]
     get=qm config %(name)s | grep 'boot:' | sed -e 's|boot: order=scsi0.*|hd|' -e 's|boot: order=ide2.*|optical|' -e 's|boot: order=net0.*|network|'
     set=qm set %(name)s --boot order=$(echo %(bootdev)s | sed -e 's|hd|scsi0|' -e 's|optical|ide2|' -e 's|network|net0|')
@@ -192,3 +193,4 @@ against the address and port of that virtual BMC. For example:
 * To get the current boot device::
 
     $ ipmitool -I lanplus -U admin -P password -H 127.0.0.1 -p 6230 chassis bootparam get 5
+

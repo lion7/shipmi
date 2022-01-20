@@ -49,7 +49,7 @@ class VirtualBMCManagerTestCase(base.TestCase):
                            'provider': 'test',
                            'active': 'False'}
         with mock.patch('shipmi.provider._PROVIDERS_PATHS', test_utils.TEST_PROVIDERS_PATHS):
-            provider._discover_providers()
+            provider.discover_providers()
 
     def _get_config(self, section, item):
         return self.vbmc_config0.get(item)
@@ -241,7 +241,7 @@ class VirtualBMCManagerTestCase(base.TestCase):
         ret, _ = self.manager.list()
         expected_ret = 0
         self.assertEqual(ret, expected_ret)
-        self.assertEqual(self.manager.config_dir, _CONFIG_PATH) # FIXME
+        self.assertEqual(self.manager.config_dir, _CONFIG_PATH)
         mock_listdir.assert_called_once_with(_CONFIG_PATH)
         expected_calls = [mock.call(self.path0),
                           mock.call(self.path1)]

@@ -50,7 +50,7 @@ _PROVIDERS_PATHS = [
 _PROVIDERS = {}
 
 
-def _discover_providers():
+def discover_providers():
     global _PROVIDERS
     _PROVIDERS = {}
     files = []
@@ -74,7 +74,7 @@ def get_provider(name):
         return ProviderConfig(path)
     else:
         if len(_PROVIDERS) == 0:
-            _discover_providers()
+            discover_providers()
         provider = _PROVIDERS.get(name)
         if provider:
             return provider
@@ -84,5 +84,5 @@ def get_provider(name):
 
 def names():
     if len(_PROVIDERS) == 0:
-        _discover_providers()
+        discover_providers()
     return list(_PROVIDERS.keys())
