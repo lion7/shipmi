@@ -47,6 +47,7 @@ class VirtualBMCManagerTestCase(base.TestCase):
                            'port': '777', 'address': '::',
                            'name': 'Squidward Tentacles',
                            'provider': 'test',
+                           'comment': 'Squidwards test BMC',
                            'active': 'False'}
         with mock.patch('shipmi.provider._PROVIDERS_PATHS', test_utils.TEST_PROVIDERS_PATHS):
             provider.discover_providers()
@@ -69,7 +70,7 @@ class VirtualBMCManagerTestCase(base.TestCase):
 
         expected_get_calls = [mock.call('VirtualBMC', i)
                               for i in ('username', 'password', 'address', 'port',
-                                        'name', 'provider', 'active')]
+                                        'name', 'provider', 'comment', 'active')]
         self.assertEqual(expected_get_calls, config.get.call_args_list)
 
     @mock.patch.object(os.path, 'exists')

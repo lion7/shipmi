@@ -24,6 +24,7 @@ def get_vbmc_config(**kwargs):
               'username': kwargs.get('username', 'admin'),
               'password': kwargs.get('password', 'pass'),
               'provider': kwargs.get('provider', 'test'),
+              'comment': kwargs.get('comment', 'SprongeBobs test BMC'),
               'active': kwargs.get('active', False)}
 
     status = kwargs.get('status')

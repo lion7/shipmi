@@ -141,6 +141,9 @@ class AddCommand(Command):
                             dest='address',
                             default='::',
                             help='The address to bind to (IPv4 and IPv6 are supported); defaults to ::')
+        parser.add_argument('--comment',
+                            dest='comment',
+                            help='Descriptive comment for the virtual BMC')
         parser.add_argument('--provider',
                             required=True,
                             dest='provider',

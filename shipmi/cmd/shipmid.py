@@ -37,7 +37,7 @@ def main(argv=sys.argv[1:]):
     parser.add_argument('--detach',
                         action='store_true',
                         default=False,
-                        help='Run in background and print process ID')
+                        help='Run in background')
 
     args = parser.parse_args(argv)
 
@@ -86,7 +86,6 @@ def main(argv=sys.argv[1:]):
             if pid > 0:
                 return 0
 
-            sys.stdout.write(str(pid))
             return wrap_with_pidfile(control.application, pid)
     else:
         return wrap_with_pidfile(control.application, os.getpid())

@@ -37,7 +37,7 @@ CONF = shipmi_config.get_config()
 
 
 class VirtualBMCManager(object):
-    VBMC_OPTIONS = ['username', 'password', 'address', 'port', 'name', 'provider', 'active']
+    VBMC_OPTIONS = ['username', 'password', 'address', 'port', 'name', 'provider', 'comment', 'active']
 
     def __init__(self):
         super(VirtualBMCManager, self).__init__()
@@ -226,7 +226,7 @@ class VirtualBMCManager(object):
     def periodic(self, shutdown=False):
         self._sync_vbmc_states(shutdown)
 
-    def add(self, username, password, port, address, name, provider, **kwargs):
+    def add(self, username, password, port, address, name, comment, provider, **kwargs):
 
         get_provider(provider)
 
@@ -249,6 +249,7 @@ class VirtualBMCManager(object):
                                port=str(port),
                                address=address,
                                provider=provider,
+                               comment=comment,
                                active=False)
         except Exception as ex:
             shutil.rmtree(config_path)
