@@ -17,11 +17,10 @@ import builtins
 import os
 from unittest import mock
 
-
-from shipmi.cmd import shipmid
 from shipmi import control
-from shipmi.tests.unit import base
 from shipmi import utils
+from shipmi.cmd import shipmid
+from shipmi.tests.unit import base
 
 
 class VBMCDTestCase(base.TestCase):
@@ -32,7 +31,7 @@ class VBMCDTestCase(base.TestCase):
     def test_main_foreground(self, mock_unlink, mock_kill, mock_open):
         with mock.patch.object(control, 'application') as mock_ml:
             mock_kill.side_effect = OSError()
-            shipmid.main(['--foreground'])
+            shipmid.main([])
             mock_kill.assert_called_once()
             mock_ml.assert_called_once()
             mock_unlink.assert_called_once()
@@ -40,12 +39,12 @@ class VBMCDTestCase(base.TestCase):
     @mock.patch.object(builtins, 'open')
     @mock.patch.object(os, 'kill')
     @mock.patch.object(os, 'unlink')
-    def test_main_background(self, mock_unlink, mock_kill, mock_open):
+    def test_main_detached(self, mock_unlink, mock_kill, mock_open):
         with mock.patch.object(utils, 'detach_process') as mock_dp:
             with mock.patch.object(control, 'application') as mock_ml:
                 mock_kill.side_effect = OSError()
                 mock_dp.return_value.__enter__.return_value = 0
-                shipmid.main([])
+                shipmid.main(["--detach"])
                 mock_kill.assert_called_once()
                 mock_dp.assert_called_once()
                 mock_ml.assert_called_once()

@@ -34,10 +34,10 @@ def main(argv=sys.argv[1:]):
     )
     parser.add_argument('--version', action='version',
                         version=shipmi.__version__)
-    parser.add_argument('--foreground',
+    parser.add_argument('--detach',
                         action='store_true',
                         default=False,
-                        help='Do not daemonize')
+                        help='Run in background and print process ID')
 
     args = parser.parse_args(argv)
 
@@ -81,15 +81,15 @@ def main(argv=sys.argv[1:]):
             except Exception:
                 pass
 
-    if args.foreground:
-        return wrap_with_pidfile(control.application, os.getpid())
-
-    else:
+    if args.detach:
         with utils.detach_process() as pid:
             if pid > 0:
                 return 0
 
+            sys.stdout.write(str(pid))
             return wrap_with_pidfile(control.application, pid)
+    else:
+        return wrap_with_pidfile(control.application, os.getpid())
 
 
 if __name__ == '__main__':
