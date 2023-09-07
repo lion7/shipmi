@@ -1,0 +1,133 @@
+#!/bin/bash
+#
+# Smart wrapper for openstack shipmi API calls by Dzmitry Stremkouski,
+# License: Apache 2.0.
+# Mirantis. 2023
+
+# Some variable to be set. Could be sources as well
+# OS_CLOUD env variable is used by openstack CLI.
+# It refers to a cloud, defined in /etc/openstack/clouds.yaml
+# https://docs.openstack.org/python-openstackclient/latest/configuration/index.html
+TOKEN_TTL=580
+export OS_CLOUD=devcloud
+
+# Check if HOME is set otherwise quit
+if [ -z "${HOME}" ]; then 
+  exit 1;
+fi;
+
+# Activate openstack python env
+. ${HOME}/openstack/bin/activate
+
+# Getting the input
+OS_CMD="$1";
+VM="$2";
+
+# Validating the input.
+case "${OS_CMD}" in
+  on)
+  ;;
+  off|shutdown)
+  ;;
+  reset)
+  ;;
+  status)
+  ;;
+  get|set)
+    # Dummy answer, we do not support setting bootdevice for openstack VMs
+    echo hd;
+    exit 0;
+  ;;
+  *)
+    echo "Unsupported command sent. Quitting";
+    exit 1;
+  ;;
+esac;
+
+# Functions
+_update_token_and_endpoint() {
+  T_CMD=$(openstack --debug token issue -c id -f shell 2>&1);
+  echo "${T_CMD}" | grep nova | python -c 'import json,sys; url=[e["url"] for e in [c["endpoints"][0] for c in json.load(sys.stdin)["token"]["catalog"] if c["name"]=="nova"] if e["interface"]=="public"]; print(url[0])' > ${HOME}/.shipmi/cache/nova.endpoint;
+  echo "${T_CMD}" | grep '^id=' | cut -d'"' -f2 > ${HOME}/.shipmi/cache/token;
+}
+
+_resolv_uuid() {
+  NOVA_EP=$(cat ${HOME}/.shipmi/cache/nova.endpoint);
+  KS_TKN=$(cat ${HOME}/.shipmi/cache/token);
+  T_CMD=$(curl -sH "X-Auth-Token: ${KS_TKN}" "${NOVA_EP}/servers/detail?name=$1");
+  VMSTATE=$(echo "${T_CMD}" | python -c 'import json,sys; print(json.load(sys.stdin)["servers"][0]["status"])');
+  VMUUID=$(echo "${T_CMD}" | python -c 'import json,sys; print(json.load(sys.stdin)["servers"][0]["id"])');
+  mkdir -p ${HOME}/.shipmi/cache/vms;
+  echo ${VMUUID} > ${HOME}/.shipmi/cache/vms/$1;
+  echo "${VMUUID}:${VMSTATE}";
+}
+
+_act_and_quit() {
+  VMUUID=$1;
+  NOVA_EP=$(cat ${HOME}/.shipmi/cache/nova.endpoint);
+  KS_TKN=$(cat ${HOME}/.shipmi/cache/token);
+  case "${OS_CMD}" in
+    on)
+      curl -sH "X-Auth-Token: ${KS_TKN}" -H "Content-Type: application/json" -X POST -d '{ "os-start": null }' "${NOVA_EP}/servers/${VMUUID}/action"
+    ;;
+    off|shutdown)
+      curl -sH "X-Auth-Token: ${KS_TKN}" -H "Content-Type: application/json" -X POST -d '{ "os-stop": null }' "${NOVA_EP}/servers/${VMUUID}/action"
+    ;;
+    reset)
+      curl -sH "X-Auth-Token: ${KS_TKN}" -H "Content-Type: application/json" -X POST -d '{ "reboot": { "type": "HARD" } }' "${NOVA_EP}/servers/${VMUUID}/action"
+    ;;
+    status)
+      T_CMD=$(curl -sH "X-Auth-Token: ${KS_TKN}" "${NOVA_EP}/servers/${VMUUID}");
+      VMSTATE=$(echo "${T_CMD}" | sed -re 's/^.*"status": "//g; s/".*$//g');
+      echo "${VMSTATE}" | sed -e 's|^ACTIVE$|on|; /^on$/! s|.*|off|';
+    ;;
+  esac;
+  exit;
+}
+
+# Creating the cache if not yet created
+if [ ! -d ${HOME}/.shipmi/cache/vms ]; then mkdir -p ${HOME}/.shipmi/cache/vms; fi;
+
+# Caching the token and nova endpoint or refreshing the token
+if [ ! -f ${HOME}/.shipmi/cache/token ]; then
+  _update_token_and_endpoint;
+fi;
+if [ ! -f ${HOME}/.shipmi/cache/nova.endpoint ]; then
+  _update_token_and_endpoint;
+fi;
+if [ $(( $(date +%s) - $(stat -c %Y ${HOME}/.shipmi/cache/token) )) -ge ${TOKEN_TTL} ]; then
+  _update_token_and_endpoint;
+fi;
+
+# Check the input if its uuid or name
+VMUUID="";
+if [ $(echo "${VM}" | grep -ciE '[0-9A-F]{8}-[0-9A-F]{4}-[1-5][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}') -eq 1 ]; then
+  VMUUID=${VM};
+fi
+
+# If VM is UUID, act immediately and quit
+if [ "x${VMUUID}" != "x" ]; then
+  _act_and_quit ${VMUUID};
+fi;
+
+# If VM is name but cached, resolve from cache
+# act immediately and quit
+if [ -f ${HOME}/.shipmi/cache/vms/${VM} ]; then
+  VMUUID=$(cat ${HOME}/.shipmi/cache/vms/${VM});
+  _act_and_quit ${VMUUID};
+fi;
+
+# VM name not in cache
+# Resolving, saving uuid and acting
+# If command is state, leverage from resolve call
+T_CMD=$(_resolv_uuid "${VM}");
+VMUUID=$(echo ${T_CMD} | cut -d: -f1);
+VMSTATE=$(echo ${T_CMD} | cut -d: -f2);
+VMUUID=$(cat ${HOME}/.shipmi/cache/vms/${VM})
+if [ "${OS_CMD}" == "status" ]; then
+  echo "${VMSTATE}" | sed -e 's|^ACTIVE$|on|; /^on$/! s|.*|off|';
+else
+  _act_and_quit ${VMUUID};
+fi;
+
+deactivate
